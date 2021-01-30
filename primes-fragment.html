@@ -12,14 +12,41 @@
 <div id='webgl-params'></div>
 <div>
   <div>number of numbers to check: <input type ='number' id='toCheck' value=1000></div>
-    <button id='webglButton'>start webgl</button><span id='webglTime'>a</span>
-    <button id='classicButton'>start webgl</button>
-    <span id='percent'></span>
-    <span id='classicTime'>a</span>
+    <div><button id='classicButton'>start classic</button><span id='classicElem'>a</span></div>
+    <div><button id='classicBtnAnim'>start classic</button><span id='classicElemAnim'>a</span></div>
+    <div><button id='classicBtnAnimBlock'>start classic</button>
+      <span id='classicElemAnimBlock'>a</span></div>
+    <div><button id='webglButton'>start webgl</button><span id='webglElem'>a</span></div>
 </div>
     </body>
     <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/platform/1.3.5/platform.min.js"></script>
+    <script src='calcClassic.js'></script>
+    <script src='calcClassicAnim.js'></script>
+    <script src='calcClassicAnimBlock.js'></script>
+    <script src='calcWebGL.js'></script>
+
+
+    <script>
+      function initFingerprintJS() {
+        FingerprintJS.load().then(fp => {
+          // The FingerprintJS agent is ready.
+          // Get a visitor identifier when you'd like to.
+          fp.get().then(result => {
+            // This is the visitor identifier:
+            const visitorId = result.visitorId;
+            console.log('vis id: ',visitorId);
+            main();
+          });
+        });
+      }
+    </script>
+    <script
+      async
+      src="//cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"
+      onload="initFingerprintJS()"
+    ></script>
+
 <script>
 
 console.log(platform);
@@ -27,68 +54,14 @@ document.write("You are using " + platform.name +
                " v" + platform.version + 
                " on " + platform.os);
 
-const vs = `
-attribute vec4 position;
-void main() {
-  gl_Position = position;
-}
-`;
 
-const fs = `
-
-precision highp float;
-precision highp int;
-uniform sampler2D mytex0;
-uniform sampler2D mytex1;
-uniform sampler2D mytex2;
-uniform sampler2D mytex3;
-uniform vec2 srcDimensions;
-
-
-vec4 EncodeI(int v) {
-  int d0, d1, d2, d3, t, vt;
-  t = v / 256;
-  d0 = v - t*256;
-  vt = t / 256;
-  d1 = t - vt*256;
-  t = vt / 256;
-  d2 = vt - t * 256;
-  d3 = (v / 256) / 256 / 256;
-  return vec4(
-    float(d0) / 255.,
-    float(d1) / 255.,
-    float(d2) / 255.,
-    float(d3) / 255.
-  );
-}
-
-void main() {
-  vec2 texcoord = gl_FragCoord.xy / srcDimensions;
-  vec4 value0 = texture2D(mytex0, texcoord); // [R / 255, G/255, B/255, A=1]
-  vec4 value1 = texture2D(mytex1, texcoord);
-  vec4 value2 = texture2D(mytex2, texcoord);
-  vec4 value3 = texture2D(mytex3, texcoord);
-  
-  int vri = (int(value0[0]*255.) + 256*(int(value1[1]*255.) + 
-        256*(int(value2[0]*255.) +  256*int(value3[0]*255.))));
-  int ds = 0; // store successful divider
-  for (int i=3; i<53333; i+=2) {
-    int d1 = vri / i;
-    if (vri == (d1 * i) && ds == 0) ds=i; 
-  }  
-  gl_FragColor = EncodeI(ds);
-}
-`;
-var addParam = (pname, pvalue) => document.getElementById('webgl-params').innerHTML += '<br>' + pname + ': ' + pvalue
-
-//addParam('mini test: ', tt1-tt0)
 
 function miniBenchmark() {
     var tt0 = Date.now()
     var tt1 = tt0+1
     var at = []
     var count = 0;
-    while(tt1-tt0 < 100) {
+    while(tt1-tt0 < 100) {      
     for (var i=3; i< 100000; i+=2) {
         if (2000111222-i % i == 0) at.push(i) 
     }
@@ -100,254 +73,61 @@ function miniBenchmark() {
 console.log('mini benchmark ',count)
 return count;
 }
-var bench = miniBenchmark();
 
 function setCounter(elem, current, max) {
 
 }
 
-var nn = 25 * bench
-nn = 50000
-document.getElementById('toCheck').value = nn
-const dstWidth = 1000
-const dstHeight = nn / dstWidth / 2;
+var updatePercent = (elem) => (i, n) => {
+    var t = 100*i/n;
+    //t = 82.2
+    var s = t.toFixed(2) + '%'
+    elem.innerHTML = s
+  }
+var displayResults = (elem, callback, nnn) => (time, results) => {
+  var n; if (nnn) {n = nnn} else {n =nn}
+  console.log('onfinish: ', time ,results.length)
+  elem.innerHTML= time + ' sec; found = ' + results.length + 
+    '; numbers/sec = ' + (n/time).toFixed(3)
+  if (callback) callback();
+}
+
+
 var startNumber = 3000*1000
-startNumber = 2000*1000*1000
+startNumber = 2000*1000*1000+1
 
-
-// make a 3x2 canvas for 6 results
-const canvas = document.createElement('canvas');
-canvas.width = dstWidth;
-canvas.height = dstHeight;
-
-const gl = canvas.getContext('webgl2');
-
-function getWebGLInfo(gl) {
-    var r = {}
-    var vfprec = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)
-    var viprec = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT)
-    var ffprec = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)
-    var fiprec = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT)
-    function precParse(prec) {
-        return {
-            rangeMin: prec.rangeMin,
-            rangeMax: prec.rangeMax,
-            precision: prec.precision
-        }
-    }
-    r['vertex float precision'] = JSON.stringify(precParse(vfprec))
-    r['vertex integer precision'] = JSON.stringify(precParse(viprec))
-    r['fragment float precision'] = JSON.stringify(precParse(ffprec))
-    r['fragment integer precision'] = JSON.stringify(precParse(fiprec))
-    var debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
-      var vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
-      var renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-      if (renderer.includes('SwiftShader')) renderer += ' (NO GPU)'
-    console.log('viprec ', JSON.stringify(precParse(viprec)))
-    console.log('vfprec ', precParse(vfprec))
-    r['GPU'] = renderer;
-    return r;
-}
-
-function printInfo(el, info) {    
-    Object.keys(info).map(e => el.innerHTML += '<br>' + e + ': ' + info[e])
-}
-console.log('aaa')
-var infoElem = document.getElementById('webgl-params')
-var glInfo = getWebGLInfo(gl)
-printInfo(infoElem, glInfo)
-console.log('bbb')
-/*
-console.log(gl.getSupportedExtensions())
-console.log('version:',gl.VERSION)
-console.log('ppp', gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT))
-console.log('ppp', gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT))
-console.log('ppp', gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT))
-console.log('max tex ', gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS)
-*/
-
-/*
-      console.log('GPU: ', renderer)
-      document.getElementById('gpu-info').innerHTML = 'GPU: ' + renderer
-
-      addParam('GPU', renderer)
-      var fprec = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)
-      fprec = Object.keys(fprec)
-      console.log('fprec ', fprec)
-      var p1 = {}; Object.assign(p1, fprec)
-      addParam('float precision', JSON.stringify(p1))
-      addParam('integer precision',gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT))
-*/
+var classicElem = document.getElementById('classicElem')
+var webglElem = document.getElementById('webglElem')
+var classicElemAnim = document.getElementById('classicElemAnim')
+var classicElemAnimBlock = document.getElementById('classicElemAnimBlock')
+var nn;
 
 
 
+function main() {
+  var bench = miniBenchmark();
 
+  nn = 20 * bench
 
-const program = webglUtils.createProgramFromSources(gl, [vs, fs]);
-gl.useProgram(program); // use program before work with locations
+//nn = 30000
+document.getElementById('toCheck').value = nn
 
-const positionLoc = gl.getAttribLocation(program, 'position');
-const srcDimensionsLoc = gl.getUniformLocation(program, 'srcDimensions');
+var calcGL = () => calcWebGL(startNumber, nn, () => {}, displayResults(webglElem))
 
-gl.uniform2f(srcDimensionsLoc, dstWidth, dstHeight);
-
-console.log('bbb2')
-
-//const myUniformLoc = gl.getUniformLocation(program, 'myuni')
-
-// setup a full canvas clip space quad
-const buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1, -1,
-   1, -1,
-  -1,  1,
-  -1,  1,
-   1, -1,
-   1,  1,
-]), gl.STATIC_DRAW);
-
-// setup our attributes to tell WebGL how to pull
-// the data from the buffer above to the position attribute
-gl.enableVertexAttribArray(positionLoc);
-gl.vertexAttribPointer(
-    positionLoc,
-    2,         // size (num components)
-    gl.FLOAT,  // type of data in buffer
-    false,     // normalize
-    0,         // stride (0 = auto)
-    0,         // offset
-);
-
-//var a = new Uint8Array([      1, 2, 3,      4, 5, 6,    ])
-var size = dstHeight * dstWidth;
-
-
-
-
-
-
-var texNums = [
-  gl.TEXTURE0,
-  gl.TEXTURE1,
-  gl.TEXTURE2,
-  gl.TEXTURE3
-]
-
-function myarrB(size, cb) {
-  var a = new Uint8Array(size);
-  for (var i=0; i<size; i++) a[i] = cb(i)
-  return a;  
-}
-
-function addByteTex(gl, width, height, name,num, arr) {     // ADD TEX
-  var texLoc = gl.getUniformLocation(program, name)
-  var size = width * height
-  var aa = new Uint8Array(size)
-  for (var i=0; i<size; i++) {aa[i] = i*1;}
-  //console.log('arr ' + name + ':',arr)
-  var tex = gl.createTexture();
-  gl.activeTexture(texNums[num])
-  gl.bindTexture(gl.TEXTURE_2D, tex)
-  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); 
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    0,
-    gl.LUMINANCE,
-    width,
-    height,
-    0,
-    gl.LUMINANCE,
-    gl.UNSIGNED_BYTE,
-    arr
-  )
-  
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-gl.uniform1i(texLoc, num)
-return texLoc;
-}                                   // ADD TEX
-
-//                                           MY TEX
-if (1) {
-
-
-var toShader = [];
-for (var i=0; i<size; i++) toShader[i] = startNumber +i*2 + 1;
-//console.log('to shader', toShader)
-
-function getBytes(number) {
-  var r = [];
-  var t = number % 256;
-  r.push(t);
-  t = Math.trunc(number / 256)
-  r.push(t % 256)
-  t = Math.trunc(t / 256)
-  r.push(t % 256)
-  t = Math.trunc(t / 256)
-  r.push(t % 256)
-  return r
-}
-
-/*
-var b0 = addByteTex(gl, dstWidth, dstHeight, 'mytex0', 0, myarrB(size, (i) => i*20+1)) 
-var b1 = addByteTex(gl, dstWidth, dstHeight, 'mytex1', 1, myarrB(size, (i) => i*20+2)) 
-var b2 = addByteTex(gl, dstWidth, dstHeight, 'mytex2', 2, myarrB(size, (i) => i*20+5)) 
-var b3 = addByteTex(gl, dstWidth, dstHeight, 'mytex3', 3, myarrB(size, (i) => i*0+0)) 
-*/
-
-var b0 = addByteTex(gl, dstWidth, dstHeight, 'mytex0', 0, myarrB(size, (i) => getBytes(toShader[i])[0])) 
-var b1 = addByteTex(gl, dstWidth, dstHeight, 'mytex1', 1, myarrB(size, (i) => getBytes(toShader[i])[1])) 
-var b2 = addByteTex(gl, dstWidth, dstHeight, 'mytex2', 2, myarrB(size, (i) => getBytes(toShader[i])[2])) 
-var b3 = addByteTex(gl, dstWidth, dstHeight, 'mytex3', 3, myarrB(size, (i) => getBytes(toShader[i])[3])) 
-//gl.uniform1i(b3, 2)
-
-}
-console.log('bbb')
-
-function calcWebGL() {
-    console.log('start webgl ...')
-    //gl.finish()
-    var t0 = Date.now()
-    gl.drawArrays(gl.TRIANGLES, 0, 6);  // draw 2 triangles (6 vertices)
-    var t1 = Date.now();
-    console.log('draw arrays timeout ', t1 - t0)
-
-    // get the result
-    const results = new Uint8Array(dstWidth * dstHeight * 4);
-    gl.readPixels(0, 0, dstWidth, dstHeight, gl.RGBA, gl.UNSIGNED_BYTE, results);
-    var t2 = Date.now()
-    console.log('read pixels timeout ', t2 -t1)
-    
-// print the results
-var rrez = []; results.map((e,i) => {
-  var k = i%4;  var ii = Math.trunc(i/4);
-  (k) ? rrez[ii].push(e) : rrez[ii] = [e]
-})
-var inOut = [];
-inOut = rrez.map((e, i) => [toShader[i], e.reduce((a,e,i) => a+e * Math.pow(256, i), 0)])
-//var ttt = [1,0,1,0]
-//rrrez = ttt.reduce((a,e,i) => a+e * Math.pow(256, i), 0)
-//console.log('read pixels results ', results, JSON.stringify(rrez))
-//console.log('inOut', JSON.stringify(inOut))
-
-var simp = [];
-for (var i=0; i<size; i++) {
-  if (inOut[i][1] === 0) simp.push(toShader[i])
-}
-console.log('simp webgl', simp.length)
-console.log('simp webgl', simp)
-console.log('end webgl ...')
-document.getElementById('webglTime').innerHTML = t2 -t0
-    return t2 -t0
-} // calcWebGL
-
-document.getElementById('webglButton').addEventListener('click', 
-    () => calcWebGL()
+calcClassic(startNumber, nn, ()=>{}, displayResults(classicElem) )
+calcClassicAnim(startNumber, nn/1000, updatePercent(classicElemAnim), 
+  displayResults(classicElemAnim,
+  () => calcClassicAnimBlock(startNumber, nn, updatePercent(classicElemAnimBlock),
+    displayResults(classicElemAnimBlock, calcGL)
+  ), 155)
 )
+
+
+
+}
+//calcClassicAnim(startNumber, nn, updatePercent,  )
+
+
 
 
 
@@ -371,151 +151,22 @@ var elem = document.getElementById('bbb')
 
 
 
-  function calcClassic(nn) {      //              CLASSIC
-    console.log('start classic ', nn)
-    t0 = Date.now()
-    var n0 = startNumber + 1;
-
-    function check(n) {
-      var tooo = Math.sqrt(n) + 2;
-      for (var i = 3; i < tooo; i += 2) {
-        if (n % i === 0) return i
-      }
-      return 0;
-    }
-    var i;
-
-    function updatePercent() {
-      var t = i / nn
-      var s = (t * 100).toFixed(2) + '%'
-      document.getElementById('percent').innerHTML = s
-      console.log(s)
-      requestAnimationFrame(updatePercent)
-    }
-    //var nn = size*2;
-    var crez = []
-    var cdel = []
-    updatePercent()
-    for (var i = 0; i < nn; i += 2) {
-      var cn = n0 + i
-      if (!check(cn)) crez.push(cn)
-      //cdel.push([cn, check(cn)])
-
-      //if ( i%10000 ==0) updatePercent(i/nn)
-
-    }
-    t1 = Date.now()
-    var time = ((t1-t0)/1000)
-    var stime = time.toFixed(3)
-    console.log('CLASSIC checked ', nn)
-    console.log('classic time', stime, ' found numbers: ', crez.length)
-    console.log('number per second: ', nn / time)
-    document.getElementById('classicTime').innerHTML = t1 - t0
-  } // calc classic
-
-  calcClassic(nn)
 
 
-  function updatePercent(i, n) {
-    var t = 100*i/n;
-    //t = 82.2
-    var s = t.toFixed(2) + '%'
-    document.getElementById('percent').innerHTML = s
-  }
+var displayResultsAnim33 = (elem) => (time, results) => {
+  console.log('onfinish: ', time ,results)
+  elem.innerHTML= time + ' sec; number = ' + results.length
 
-
-
-
-  var animResult = []
-  var animCount = 0
-  function calcPart(start, n) {
-    //console.log('calc part', start, n)
-    for (var i=start; i<n+start; i+=2) {
-      var sq = Math.sqrt(i)+2;
-      var isPrime = true;
-      //console.log(i, sq)
-      for (var j=3; j<sq; j+=2) {
-        if (i % j == 0) {
-          isPrime = false
-          break;
-        }
-      }
-      if (isPrime) animResult.push(i)
-    }
-  }
-
-  function calcClassicAnimationFrameStep(nn, step) { //                  CLASSIC ANIM FRAME
-    console.log('start anim2', nn, step)
-    var tt0 = Date.now()
-    var count = 0;
-    var localStart = 0
-    function testStep() {
-        //console.log('step ', localStart)
-     // console.log('test anim' , index, nn)
-      if (localStart >= nn) {
-        console.log('aaaaa', localStart)
-        var tt1 = Date.now()
-        var secs = (tt1-tt0)/1000
-        console.log('finished', secs, nn/secs, 'numbers per second')
-        console.log(animCount, animResult)
-        return
-      }
-      var cand = startNumber + localStart; //index*2
-      if (cand % 2 == 0) cand++
-      calcPart(cand, step);
-      updatePercent(localStart, nn)
-      localStart += step
-      var testFunction = testStep.bind(this)
-      window.requestAnimationFrame(testFunction)
-    } // test
-    animCount++
-
-    var testFunction = testStep.bind(this, 3)
-    window.requestAnimationFrame(testFunction)
-  }
-
-  //calcClassicAnimationFrameStep(nn, 5000)
+  calcClassicAnimBlock(startNumber, nn, updatePercent(classicElemAnimBlock), 
+  displayResults(classicElemAnimBlock) 
+  )
+}
 
 
 
 
 
 
-
-
-  function calcClassicAnimationFrame(nn) { //                  CLASSIC ANIM FRAME
-    console.log('start anim')
-    var tt0 = Date.now()
-    var count = 0;
-    function test(index) {
-     // console.log('test anim' , index, nn)
-      if (index >= nn) {
-        console.log('aaaaa')
-        var tt1 = Date.now()
-        var secs = (tt1-tt0)/1000
-        console.log('finished', secs, nn/secs, 'numbers per second')
-        console.log('found ', count)
-        return
-      }
-      var cand = startNumber + index*2
-      var isPrime = true
-      var n = Math.sqrt(cand) + 2;
-      for (var i=3; i<n; i++) {
-        if (cand % i === 0) {
-          isPrime = false;
-          break;
-        }
-      }
-      if (isPrime) count++
-      updatePercent(index, nn)
-
-      var testFunction = test.bind(this, index+2)
-      window.requestAnimationFrame(testFunction)
-    } // test
-
-    var testFunction = test.bind(this, 3)
-    window.requestAnimationFrame(testFunction)
-  }
 
 
 
@@ -525,32 +176,6 @@ document.getElementById('classicButton').addEventListener('click',
     () =>  calcClassic(document.getElementById('toCheck').value)
 )
 
-function calcTyped() {    //                CLASSIC TYPED
-    var a = new Uint32Array(size)
-    var i = new Uint32Array(16)
-    var nn = size*2;
-    var n0 = startNumber + 1;
-
-    function check(n) {
-        let i = new Uint32Array(16)
-        i[1] = Math.sqrt(n) + 2;
-        i[0] = 3
-        i[2] = n
-        while(i[0] < i[1]) {
-            if (i[2] % i[0] == 0) return i[0]
-            i[0] += 2
-        }
-        return 0
-    }
-    var t0 = Date.now()
-    for (var i=0 ; i<nn; i++) {var cn = n0+i
-        if (!check(cn)) a[i] = cn
-    }
-    var t1 = Date.now()
-    console.log('typed ', t1 - t0)
-    console.log(a)
-}
-//calcTyped()
 console.log('tttttttttttttttttt')
 
 /*

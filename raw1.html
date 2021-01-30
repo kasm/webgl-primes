@@ -1,0 +1,456 @@
+<html>
+    <head>
+<!--
+for most samples webgl-utils only provides shader compiling/linking and
+canvas resizing because why clutter the examples with code that's the same in every sample.
+See https://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
+and https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+for webgl-utils, m3, m4, and webgl-lessons-ui.
+-->
+<style>
+    @import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
+body {
+  margin: 0;
+  background-color: white;
+}
+canvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+</style>
+<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>        
+    </head>
+    <body>
+<div id='bbb'></div>
+    </body>
+<script>
+'use strict';
+
+const vs = `
+attribute vec4 position;
+attribute float numbers;
+varying float nnn;
+void main() {
+  nnn = numbers;
+  gl_Position = position;
+}
+`;
+
+const fs = `
+
+precision highp float;
+precision highp int;
+varying float nnn;
+//uniform sampler2D srcTex;
+uniform sampler2D mytex0;
+uniform sampler2D mytex1;
+uniform sampler2D mytex2;
+uniform sampler2D mytex3;
+uniform vec2 srcDimensions;
+uniform float myuni[100];
+
+const vec4 bitEnc = vec4(1.,255.,65025.,16581375.);
+//const vec4 bitEnc = vec4(1.,256.,65536.,65536.*256.);
+//const vec4 bitEnc = vec4(256.,65536.,65536.*256., 65536.*65536.);
+const vec4 bitDec = 1./bitEnc; // / 255.;
+vec4 EncodeFloatRGBA (float v) {
+    vec4 enc = bitEnc * v;
+    enc = fract(enc);
+    enc -= enc.yzww * vec2(1./255., 0.).xxxy;
+    return enc;
+}
+float DecodeFloatRGBA (vec4 v) {
+    return dot(v, bitDec);
+}
+
+float v2;
+
+
+vec4 EncodeF(float v2) {
+  float d0;
+  float d1, d2, d3, t;
+  t = (v2) / 256.;
+  d0 = fract(t);
+  t = float(int(t)) / 256.;
+  d1 = fract(t);
+  t = float(int(t)) / 256.;
+  d2 = fract(t);
+
+  d3 = float(int(t)) / 256.;
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+  //d0 = 82. / 256.;
+  #endif
+  return vec4(d0*256./255., d1*256./255., d2*256./255., d3*256./255.);
+}
+
+//https://stackoverflow.com/questions/33908644/get-accurate-integer-modulo-in-webgl-shader
+float modI(float a,float b) {
+    float m=a-floor((a+0.5)/b)*b;
+    return floor(m+0.5);
+}
+
+vec4 EncodeI(int v) {
+  int d0, d1, d2, d3, t, vt;
+  t = v / 256;
+  d0 = v - t*256;
+  vt = t / 256;
+  d1 = t - vt*256;
+  t = vt / 256;
+  d2 = vt - t * 256;
+  d3 = (v / 256) / 256 / 256;
+ // d3 = 1;
+
+  return vec4(
+    float(d0) / 255.,
+    float(d1) / 255.,
+    float(d2) / 255.,
+    float(d3) / 255.
+  );
+}
+
+void main() {
+  vec2 texcoord = gl_FragCoord.xy / srcDimensions;
+  //vec4 value = texture2D(srcTex, texcoord);
+  vec4 value0 = texture2D(mytex0, texcoord); // [R / 255, G/255, B/255, A=1]
+  vec4 value1 = texture2D(mytex1, texcoord);
+  vec4 value2 = texture2D(mytex2, texcoord);
+  vec4 value3 = texture2D(mytex3, texcoord);
+  ///long tt2;
+  float vr = (value0[0] + 256.*(value1[1] + 256.*(value2[0] + 256.*value3[0])))*255.;
+ // vr = 15345671.;
+
+  float d = sqrt(vr);
+  int vri = int(vr);
+  vri = (int(value0[0]*255.) + 
+  256*(int(value1[1]*255.) +
+   256*(int(value2[0]*255.) +
+    256*int(value3[0]*255.))));
+  int ds = 0;
+
+  for (int i=3; i<53333; i+=2) {
+    int d1 = vri / i;
+    //float bb = floor(d1);
+    if (vri == (d1 * i) && ds == 0) ds=i; //d1 * i;
+    //if ( modI(vr, float(i)) == 0. && ds == 0) ds=i; //d1 * i;
+  }
+
+  
+
+
+
+  float t = 5.;
+  //int i;
+  //for (int i=0; i<50000; i++) {    t = t+ value2[0] / 8.;  }
+  gl_FragColor = vec4(0., 0.1, 0.3, 0.9); //EncodeFloatRGBA(2048.);
+  //gl_FragColor = EncodeFloatRGBA(2048.);
+  //v2 = 65536*256*127;
+  v2 = 256.*256.*213. + 15.;
+  vec4 ttt;
+  //float vfloat = 255.* (value[0] + 256.*(value[1] + 256.*(value[2] + 256.*value[3])));
+ //ttt = EncodeF(value2[1]* 256. *1.);
+  ttt = EncodeF(value3[1] * 255.* 1. + value2[1] * 256. * 255.);
+  ttt = EncodeF(float(ds));
+  ttt = EncodeF(modI(4186431., float(3)));
+  ttt = EncodeF( 1000.);
+  //ttt = EncodeF(21.* 256.*256.*256. *1.);
+  //ttt = EncodeF(1. *256. *256.);
+
+  //ttt = EncodeF(3.* 256. *100.);
+  //ttt = EncodeF(256.*256.*256. *value2[3]);
+  //ttt = EncodeF(25.*value3[0]);
+  //ttt = EncodeFloatRGBA(v2);
+
+  //ttt = EncodeI(256*256* 257+ 0);
+  ttt = EncodeI(ds);
+  gl_FragColor = ttt;
+}
+`;
+
+const dstWidth = 600
+const dstHeight = 100;
+var startNumber = 3000*1000
+startNumber = 2000*1000*1000
+
+
+// make a 3x2 canvas for 6 results
+const canvas = document.createElement('canvas');
+canvas.width = dstWidth;
+canvas.height = dstHeight;
+
+const gl = canvas.getContext('webgl2');
+console.log(gl.getSupportedExtensions())
+console.log('version:',gl.VERSION)
+console.log('ppp', gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT))
+console.log('ppp', gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT))
+console.log('ppp', gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT))
+console.log('max tex ', gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+
+const program = webglUtils.createProgramFromSources(gl, [vs, fs]);
+gl.useProgram(program); // use program before work with locations
+
+const positionLoc = gl.getAttribLocation(program, 'position');
+const srcDimensionsLoc = gl.getUniformLocation(program, 'srcDimensions');
+
+gl.uniform2f(srcDimensionsLoc, dstWidth, dstHeight);
+
+
+//const myUniformLoc = gl.getUniformLocation(program, 'myuni')
+
+// setup a full canvas clip space quad
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1, -1,
+   1, -1,
+  -1,  1,
+  -1,  1,
+   1, -1,
+   1,  1,
+]), gl.STATIC_DRAW);
+
+// setup our attributes to tell WebGL how to pull
+// the data from the buffer above to the position attribute
+gl.enableVertexAttribArray(positionLoc);
+gl.vertexAttribPointer(
+    positionLoc,
+    2,         // size (num components)
+    gl.FLOAT,  // type of data in buffer
+    false,     // normalize
+    0,         // stride (0 = auto)
+    0,         // offset
+);
+
+//var a = new Uint8Array([      1, 2, 3,      4, 5, 6,    ])
+var size = dstHeight * dstWidth;
+
+if (0) {                                      // TEX ORIG
+  const srcTexLoc = gl.getUniformLocation(program, 'srcTex');
+
+  var a = new Uint8Array(size);
+for (var i =0;i<size; i++) a[i]=i+3
+console.log('a', a)
+
+// create our source texture
+const srcWidth = 3;
+const srcHeight = 2;
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); 
+// see https://webglfundamentals.org/webgl/lessons/webgl-data-textures.html
+gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,                // mip level
+    gl.LUMINANCE,     // internal format
+    dstWidth, //srcWidth,
+    dstHeight, //srcHeight,
+    0,                // border
+    gl.LUMINANCE,     // format
+    gl.UNSIGNED_BYTE, // type
+    a);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.uniform1i(srcTexLoc, 0);  // tell the shader the src texture is on texture unit 0
+
+}
+
+
+
+
+//gl.uniform2f(srcDimensionsLoc, srcWidth, srcHeight);
+//gl.uniform1fv(myUniformLoc, a)
+/*
+//                                          NUMBERS
+var myNumbers = new Float32Array(size);
+for (var i=0; i<size; i++) myNumbers[i] = 111+i*5;
+console.log(myNumbers)
+
+var myNumbersLoc = gl.getAttribLocation(program, 'numbers')
+var numbersBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, numbersBuffer)
+gl.bufferData(gl.ARRAY_BUFFER, myNumbers, gl.STATIC_DRAW)
+gl.enableVertexAttribArray(myNumbersLoc)
+gl.vertexAttribPointer(myNumbersLoc, 1, gl.FLOAT, false, 0, 0)
+*/
+
+//var texLoc
+
+function myarrF(size, cb) {
+  var a = new Float32Array(size);
+  for (var i=0; i<size; i++) a[i] = cb[i]
+  return a;
+}
+
+var texNums = [
+  gl.TEXTURE0,
+  gl.TEXTURE1,
+  gl.TEXTURE2,
+  gl.TEXTURE3
+]
+
+function myarrB(size, cb) {
+  var a = new Uint8Array(size);
+  for (var i=0; i<size; i++) a[i] = cb(i)
+  return a;  
+}
+
+function addByteTex(gl, width, height, name,num, arr) {     // ADD TEX
+  var texLoc = gl.getUniformLocation(program, name)
+  var size = width * height
+  var aa = new Uint8Array(size)
+  for (var i=0; i<size; i++) {aa[i] = i*1;}
+  console.log('arr ' + name + ':',arr)
+  var tex = gl.createTexture();
+  gl.activeTexture(texNums[num])
+  gl.bindTexture(gl.TEXTURE_2D, tex)
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1); 
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.LUMINANCE,
+    width,
+    height,
+    0,
+    gl.LUMINANCE,
+    gl.UNSIGNED_BYTE,
+    arr
+  )
+  
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+gl.uniform1i(texLoc, num)
+return texLoc;
+}                                   // ADD TEX
+
+//                                           MY TEX
+if (1) {
+
+
+var toShader = [];
+for (var i=0; i<size; i++) toShader[i] = startNumber +i*2 + 1;
+console.log('to shader', toShader)
+
+function getBytes(number) {
+  var r = [];
+  var t = number % 256;
+  r.push(t);
+  t = Math.trunc(number / 256)
+  r.push(t % 256)
+  t = Math.trunc(t / 256)
+  r.push(t % 256)
+  t = Math.trunc(t / 256)
+  r.push(t % 256)
+  return r
+}
+console.log('gggg', getBytes(1000007))
+/*
+var b0 = addByteTex(gl, dstWidth, dstHeight, 'mytex0', 0, myarrB(size, (i) => i*20+1)) 
+var b1 = addByteTex(gl, dstWidth, dstHeight, 'mytex1', 1, myarrB(size, (i) => i*20+2)) 
+var b2 = addByteTex(gl, dstWidth, dstHeight, 'mytex2', 2, myarrB(size, (i) => i*20+5)) 
+var b3 = addByteTex(gl, dstWidth, dstHeight, 'mytex3', 3, myarrB(size, (i) => i*0+0)) 
+*/
+
+var b0 = addByteTex(gl, dstWidth, dstHeight, 'mytex0', 0, myarrB(size, (i) => getBytes(toShader[i])[0])) 
+var b1 = addByteTex(gl, dstWidth, dstHeight, 'mytex1', 1, myarrB(size, (i) => getBytes(toShader[i])[1])) 
+var b2 = addByteTex(gl, dstWidth, dstHeight, 'mytex2', 2, myarrB(size, (i) => getBytes(toShader[i])[2])) 
+var b3 = addByteTex(gl, dstWidth, dstHeight, 'mytex3', 3, myarrB(size, (i) => getBytes(toShader[i])[3])) 
+//gl.uniform1i(b3, 2)
+
+}
+
+
+//gl.finish()
+var t0 = Date.now()
+gl.drawArrays(gl.TRIANGLES, 0, 6);  // draw 2 triangles (6 vertices)
+var t1 = Date.now();
+console.log('draw arrays timeout ', t1 - t0)
+
+// get the result
+const results = new Uint8Array(dstWidth * dstHeight * 4);
+gl.readPixels(0, 0, dstWidth, dstHeight, gl.RGBA, gl.UNSIGNED_BYTE, results);
+var t2 = Date.now()
+console.log('read pixels timeout ', t2 -t1)
+var aii = Math.trunc(42.88)
+
+// print the results
+var rrez = []; results.map((e,i) => {
+  var k = i%4;  var ii = Math.trunc(i/4);
+  (k) ? rrez[ii].push(e) : rrez[ii] = [e]
+})
+var inOut = [];
+inOut = rrez.map((e, i) => [toShader[i], e.reduce((a,e,i) => a+e * Math.pow(256, i), 0)])
+//var ttt = [1,0,1,0]
+//rrrez = ttt.reduce((a,e,i) => a+e * Math.pow(256, i), 0)
+//console.log('read pixels results ', results, JSON.stringify(rrez))
+//console.log('inOut', JSON.stringify(inOut))
+
+var simp = [];
+for (var i=0; i<size; i++) {
+  if (inOut[i][1] === 0) simp.push(toShader[i])
+}
+console.log('simp webgl', simp)
+
+
+for (let i = 0; i < dstWidth * dstHeight; ++i) {
+  log(results[i * 4]);
+}
+
+function log(...args) {
+  //const elem = document.createElement('pre');
+var elem = document.getElementById('bbb')
+  elem.textContent = args.join(' ');
+  //document.body.appendChild(elem);
+}
+
+// prime classic
+t0 = Date.now()
+var n0 = startNumber + 1;
+
+function check(n) {
+  var tooo = Math.sqrt(n) +2;
+  for (var i=3; i<tooo; i++) {
+    if (n % i === 0) return i
+  }
+  return 0;
+}
+var nn = size*2;
+var crez = []
+var cdel = []
+for (var i=0; i<nn; i+=2) { var cn = n0+i
+  if (!check(cn)) crez.push(cn)
+  cdel.push([cn,check(cn)])
+
+}
+t1 = Date.now()
+
+console.log('classic time', t1-t0, crez)
+console.log('cdel ', JSON.stringify(cdel))
+var diffar = []
+var diff = 0;
+for (var i=0; i<inOut.length; i++) {
+  if (inOut[i][0] != cdel[i][0] || inOut[i][1] != cdel[i][1]) {
+    diff += 1
+    diffar.push([inOut[i][0], inOut[i][1], cdel[i][0], cdel[i][1]])
+  } else {
+    diff += 0
+  }
+}
+console.log('diff ', diff, inOut.length)
+console.log('diff inout, classic ', JSON.stringify(diffar))
+
+/*
+thin things
+1. to shader
+2. from shader
+3. presision
+*/
+</script>
+</html>
