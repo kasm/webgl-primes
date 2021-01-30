@@ -94,7 +94,7 @@ var displayResults = (elem, callback, nnn) => (time, results) => {
 
 
 var startNumber = 3000*1000
-startNumber = 2000*1000*1000+1
+startNumber = 1000*1000*1000+1
 
 var classicElem = document.getElementById('classicElem')
 var webglElem = document.getElementById('webglElem')
@@ -109,7 +109,7 @@ function main() {
 
   nn = 20 * bench
 
-//nn = 30000
+//nn = 363300
 document.getElementById('toCheck').value = nn
 
 var calcGL = () => calcWebGL(startNumber, nn, () => {}, displayResults(webglElem))

@@ -288,15 +288,16 @@ simp = [];
 for (var i=0; i<size; i++) {
   if (inOut[i][1] === 0) simp.push(toShader[i])
 }
-console.log('simp webgl', simp.length)
+simp2 = []; simp.map(e => {if (e < startNumber + nn) simp2.push(e)})
+console.log('simp webgl', simp2.length)
 //console.log('simp webgl', simp)
 console.log('end webgl ...')
 //document.getElementById('webglTime').innerHTML = t2 -t0
     return (t2 -t0) / 1000
 } // calcWebGL
-
+var simp2
 var time = calcWebGL2()
-onFinish(time, simp)
+onFinish(time, simp2)
 
 //document.getElementById('webglButton').addEventListener('click',  () => calcWebGL())
 
