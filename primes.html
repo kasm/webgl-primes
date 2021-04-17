@@ -1,22 +1,37 @@
 <html>
     <head>
+     
+
 <style>
     #webgl-params {
         font-size: 10px;
     }
+    #rez { font-size: 12px;}
+#webglTable {
+  display: block;
+} 
 </style>
     </head>
-    <body>
+    <body>ddddddd23
 <div id='gpu-info'></div>
-<div id='bbb'></div>
-<div id='webgl-params'></div>
+<div id='bbb'></div> 
+<div id='bbb33'>bbb31311 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>
+<div id = 'status'>wait detecting hardware ...</div>
+<table id='webglTable'>
+  <thead><th>Param</th><th>value</th></thead>
+  <tbody id='webgl-params'></tbody>
+  
+</table>
+<div id='webgl-params'></div>aaaaa
 <div>
-  <div>number of numbers to check: <input type ='number' id='toCheck' value=1000></div>
+  <div>Hello Lina s!ssss   numbers tt bbsba33321 7ss3377  553344455211121 of numbers to check: <input type ='number' id='toCheck' value=1000></div>
+  <div id='rez'>
     <div><button id='classicButton'>start classic</button><span id='classicElem'>a</span></div>
     <div><button id='classicBtnAnim'>start classic</button><span id='classicElemAnim'>a</span></div>
     <div><button id='classicBtnAnimBlock'>start classic</button>
       <span id='classicElemAnimBlock'>a</span></div>
     <div><button id='webglButton'>start webgl</button><span id='webglElem'>a</span></div>
+</div>
 </div>
     </body>
     <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
@@ -24,10 +39,12 @@
     <script src='calcClassic.js'></script>
     <script src='calcClassicAnim.js'></script>
     <script src='calcClassicAnimBlock.js'></script>
-    <script src='calcWebGL.js'></script>
+    
+    <script id='webScript' ></script>  
 
 
     <script>
+      //document.getElementById('webScript').setAttribute('src', 'calcWebGL.js?t=' + Date.now())
       function initFingerprintJS() {
         FingerprintJS.load().then(fp => {
           // The FingerprintJS agent is ready.
@@ -39,6 +56,8 @@
             main();
           });
         });
+      }
+      function initFingerprintJS2() {
       }
     </script>
     <script
@@ -78,7 +97,15 @@ function setCounter(elem, current, max) {
 
 }
 
-var updatePercent = (elem) => (i, n) => {
+function trimArray(a, start, end) {
+  var rez = []
+  for (var i=0; i<a.length; i++) {
+    if (i<start || i>a.length-end) rez.push(a[i])
+  }
+  return rez;
+}
+
+var updatePercent = (elem) => (i, n) => { 
     var t = 100*i/n;
     //t = 82.2
     var s = t.toFixed(2) + '%'
@@ -86,45 +113,55 @@ var updatePercent = (elem) => (i, n) => {
   }
 var displayResults = (elem, callback, nnn) => (time, results) => {
   var n; if (nnn) {n = nnn} else {n =nn}
-  console.log('onfinish: ', time ,results.length)
+  //console.log('onfinish: ', time ,results.length)
   elem.innerHTML= time + ' sec; found = ' + results.length + 
-    '; numbers/sec = ' + (n/time).toFixed(3)
+    '; numbers/sec = ' + (n/time).toFixed(3) + JSON.stringify(trimArray(results, 13,13)).replaceAll(',', ', ')
+    var wrez = JSON.stringify(results).replace(',', ', ')
+    //console.log('web gl rez', wrez.length)
+    if (elem == webglElem) {
+      //elem.innerHTML = wrez
+    }
+  //  elem.innerHTML = 'tt time: ' + time + 'number: ' + results.length +'JSON: ' + JSON.stringify(results).replaceAll(',', ', ')
   if (callback) callback();
 }
 
-
+ 
 var startNumber = 3000*1000
-startNumber = 1000*1000*1000+1
+startNumber = 1000*1000*1+1
+startNumber =  1267401
+startNumber =  1397401
 
 var classicElem = document.getElementById('classicElem')
 var webglElem = document.getElementById('webglElem')
 var classicElemAnim = document.getElementById('classicElemAnim')
 var classicElemAnimBlock = document.getElementById('classicElemAnimBlock')
 var nn;
+var rezClassicA
+var rezWebGLA
 
-
+// 1267457 / 337 = 3761
 
 function main() {
-  var bench = miniBenchmark();
+  var bench = Math.floor(miniBenchmark());
 
-  nn = 20 * bench
-
-//nn = 363300
+  nn = 2.115 * bench
+  //mainWebglInfo();
+//nn = 36300
 document.getElementById('toCheck').value = nn
 
 var calcGL = () => calcWebGL(startNumber, nn, () => {}, displayResults(webglElem))
 
 calcClassic(startNumber, nn, ()=>{}, displayResults(classicElem) )
-calcClassicAnim(startNumber, nn/1000, updatePercent(classicElemAnim), 
+calcClassicAnim(startNumber, Math.sqrt(nn)/10, updatePercent(classicElemAnim), 
   displayResults(classicElemAnim,
   () => calcClassicAnimBlock(startNumber, nn, updatePercent(classicElemAnimBlock),
     displayResults(classicElemAnimBlock, calcGL)
   ), 155)
 )
+} // main
 
 
 
-}
 //calcClassicAnim(startNumber, nn, updatePercent,  )
 
 
@@ -217,7 +254,7 @@ console.log('diff inout, classic ', JSON.stringify(diffar))
 
 
 
-function init() {
+function init23232() {
       canvas = document.querySelector("#glCanvas")
       gl = canvas.getContext("webgl")
       if (gl === null) {
@@ -303,4 +340,12 @@ function init() {
 
 
 </script>
+<script>
+  var ts = Date.now()
+  var se = document.getElementById('webScript');
+  se.src = 'calcWebGL.js?t=' + ts;
+  //se.onload = main;
+</script>
+</body>
+<script src='live.js'></script>
 </html>

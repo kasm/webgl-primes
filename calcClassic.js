@@ -1,4 +1,5 @@
-function calcClassic(startNumber, toWork,  onUpdate,onFinish) {    
+function calcClassic(startNumber, toWork,  onUpdate,onFinish) {  
+  console.log('classic ', startNumber, toWork)  
     var rez = []
     var t0 = Date.now()
     for (var i=startNumber; i<=startNumber+toWork; i+=2) {
@@ -6,6 +7,7 @@ function calcClassic(startNumber, toWork,  onUpdate,onFinish) {
         var isPrime = true
         for (var j=3; j<sq; j+=2) {
             if (i%j == 0) {
+              console.log('clllllaaaa ', i , j)
                 isPrime = false;
                 break;
             }
@@ -15,11 +17,13 @@ function calcClassic(startNumber, toWork,  onUpdate,onFinish) {
     var t1 = Date.now()
     var time = (t1-t0)/1000
     console.log('time classic', time)
+    console.log('time rez', rez)
+
     onFinish(time, rez)
 }
 
 
-
+ 
 
 
 

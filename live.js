@@ -145,6 +145,9 @@
 
     // act upon a changed url of certain content type
     refreshResource: function (url, type) {
+      console.log('refresh start ', url)
+      document.location.reload();
+      return;
       switch (type.toLowerCase()) {
         // css files can be reloaded dynamically by replacing the link element                               
         case "text/css":
@@ -168,16 +171,16 @@
 
         // check if an html resource is our current url, then reload                               
         case "text/html":
-          if (url != document.location.href)
-            return;
+          //if (url != document.location.href)            return;
 
           // local javascript changes cause a reload as well
         case "text/javascript":
         case "application/javascript":
         case "application/x-javascript":
-          document.location.reload();
-      }
-    },
+          
+      } // switch type
+      document.location.reload();
+    }, // refresh
 
     // removes the old stylesheet rules only once the new one has finished loading
     removeoldLinkElements: function () {
