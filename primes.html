@@ -1,239 +1,327 @@
 <html>
-    <head>
-     
 
-<style>
-    #webgl-params {
-        font-size: 10px;
-    }
-    #rez { font-size: 12px;}
-#webglTable {
-  display: block;
-} 
-</style>
-    </head>
-    <body>ddddddd23
-<div id='gpu-info'></div>
-<div id='bbb'></div> 
-<div id='bbb33'>bbb31311 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>
-<div id = 'status'>wait detecting hardware ...</div>
-<table id='webglTable'>
-  <thead><th>Param</th><th>value</th></thead>
-  <tbody id='webgl-params'></tbody>
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   
-</table>
-<div id='webgl-params'></div>aaaaa
-<div>
-  <div>Hello Lina s!ssss   numbers tt bbsba33321 7ss3377  553344455211121 of numbers to check: <input type ='number' id='toCheck' value=1000></div>
-  <div id='rez'>
-    <div><button id='classicButton'>start classic</button><span id='classicElem'>a</span></div>
-    <div><button id='classicBtnAnim'>start classic</button><span id='classicElemAnim'>a</span></div>
-    <div><button id='classicBtnAnimBlock'>start classic</button>
-      <span id='classicElemAnimBlock'>a</span></div>
-    <div><button id='webglButton'>start webgl</button><span id='webglElem'>a</span></div>
-</div>
-</div>
-    </body>
-    <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/platform/1.3.5/platform.min.js"></script>
-    <script src='calcClassic.js'></script>
-    <script src='calcClassicAnim.js'></script>
-    <script src='calcClassicAnimBlock.js'></script>
-    
-    <script id='webScript' ></script>  
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+  <style>
+    #webgl-params {
+   width: 500px;
+    }
+
+    #rez {
+      font-size: 12px;
+    }
+
+    #webglTable {
+      display: block;
+    }
+    table, th, td {
+  border: 1px solid black;
+}
+th.timeCol {
+  width: 70px;
+}
+.headrow {
+  background-color: azure;
+}
+
+ .table > tbody > tr > td {
+  padding: 4;
+}
+  </style>
+</head>
+
+<body>
+  <div id='primes_main' style='border: 2px solid green; width: 700px;'>
 
 
-    <script>
-      //document.getElementById('webScript').setAttribute('src', 'calcWebGL.js?t=' + Date.now())
-      function initFingerprintJS() {
-        FingerprintJS.load().then(fp => {
-          // The FingerprintJS agent is ready.
-          // Get a visitor identifier when you'd like to.
-          fp.get().then(result => {
-            // This is the visitor identifier:
-            const visitorId = result.visitorId;
-            console.log('vis id: ',visitorId);
-            main();
-          });
-        });
-      }
-      function initFingerprintJS2() {
-      }
-    </script>
-    <script
-      async
-      src="//cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"
-      onload="initFingerprintJS()"
-    ></script>
+    <table id='webglTable' style='border: 1px solid red' class='table mytable'>
+      <thead>
+        <tr><td colspan="4" style='text-align: center;'>General machine properites</td></tr>
+      </thead>
+      <tbody id='webgl-params'>
+
+        <tr><td>GPU</td><td colspan="3">bb</td></tr>
+        <tr><td>Vendor</td><td colspan="3">bb</td></tr>
+
+        <tr class='headrow'><th>aa</th><th>precision</th><th>min</th><th>max</th></tr>
+        <tr><td>vertex float</td><td>bb</td><td>bb</td><td>bb</td></tr>
+        <tr><td>vertex integer</td><td>bb</td><td>bb</td><td>bb</td></tr>
+        <tr><td>fragment float</td><td>bb</td><td>bb</td><td>bb</td></tr>
+        <tr><td>fragment integer</td><td>bb</td><td>bb</td><td>bb</td></tr>
+
+        <tr><td>real fragment int precision</td><td colspan="3">bb</td></tr>
+        <tr><td>platform</td><td colspan="3">bb</td></tr>
+        <tr><td>numbers to check</td><td colspan="3" id = 'number2check'></td></tr>
+
+      </tbody>
+    </table>
+
+    <div style = 'text-align: center; font-size: large; display: none;'>Calculation results</div>
+
+    <table class = 'table'>
+      <thead>
+        <tr><td colspan="5" style='text-align: center;'>Calculation results</td></tr>
+
+        <tr>
+        <th>type</th>
+        <th class='timeCol'>time, sec</th>
+        <th>found</th>
+        <th>numbers/sec</th>
+        <th>examples</th>
+      </tr>
+      </thead>
+      <tbody>
+        <tr id=classicRow><td>classic</td><td id=classicUpdate></td><td></td><td></td><td></td></tr>
+        <tr id=classicAnimRow><td>classic2</td><td id=classicAnimUpdate></td><td></td><td></td><td></td></tr>
+        <tr id=classicAnimBlockRow><td>classic</td><td id=classicAnimBlockUpdate></td><td></td><td></td><td></td></tr>
+        <tr id=webGLRow><td>classic</td><td id=webGLUpdate></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+
+    <div>
+
+      <div id='rez'>
+        <div><button id='classicButton'>start classic</button><span id='classicElem'>a</span></div>
+        <div><button id='classicBtnAnim'>start classic</button><span id='classicElemAnim'>a</span></div>
+        <div><button id='classicBtnAnimBlock'>start classic</button>
+          <span id='classicElemAnimBlock'>a</span>
+        </div>
+        <div><button id='webglButton'>start webgl</button><span id='webglElem'>a</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/platform/1.3.5/platform.min.js"></script>
+<script src='calcClassic.js'></script>
+<script src='calcClassicAnim.js'></script>
+<script src='calcClassicAnimBlock.js'></script> 
+<script src='calcWebGL.js'></script> 
+<script src = 'webgl_info.js'></script>
+
+<script id='webScript'></script>
+
+
+<script>
+  //document.getElementById('webScript').setAttribute('src', 'calcWebGL.js?t=' + Date.now())
+  function initFingerprintJS() {
+    FingerprintJS.load().then(fp => {
+      // The FingerprintJS agent is ready.
+      // Get a visitor identifier when you'd like to.
+      fp.get().then(result => {
+        // This is the visitor identifier:
+        const visitorId = result.visitorId;
+        console.log('vis id: ', visitorId);
+        //main();
+      });
+    });
+  }
+  function initFingerprintJS2() {
+  }
+</script>
+<script async src="//cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"
+  onload="initFingerprintJS()"></script>
 
 <script>
 
-console.log(platform);
-document.write("You are using " + platform.name +
-               " v" + platform.version + 
-               " on " + platform.os);
+  console.log(platform);
+  document.write("You are using " + platform.name +
+    " v" + platform.version +
+    " on " + platform.os);
 
 
 
-function miniBenchmark() {
+  function miniBenchmark() {
     var tt0 = Date.now()
-    var tt1 = tt0+1
+    var tt1 = tt0 + 1
     var at = []
     var count = 0;
-    while(tt1-tt0 < 100) {      
-    for (var i=3; i< 100000; i+=2) {
-        if (2000111222-i % i == 0) at.push(i) 
-    }
-    var tt1 = Date.now()
-    //console.log(tt1)
-    count++;
-    //addParam('pp' + tt1 + '    ', count)
+    while (tt1 - tt0 < 100) {
+      at = []
+      for (var i = 3; i < 100000; i += 2) {
+        if (2000111222 - i % i == 0) at.push(i)
+      }
+      var tt1 = Date.now()
+      count++;
     } // while
-console.log('mini benchmark ',count)
-return count;
-}
-
-function setCounter(elem, current, max) {
-
-}
-
-function trimArray(a, start, end) {
-  var rez = []
-  for (var i=0; i<a.length; i++) {
-    if (i<start || i>a.length-end) rez.push(a[i])
+    console.log('mini benchmark ', count)
+    return count;
   }
-  return rez;
-}
 
-var updatePercent = (elem) => (i, n) => { 
-    var t = 100*i/n;
+  function setCounter(elem, current, max) {
+
+  }
+
+  function trimArray(a, start, end) {
+    var rez = []
+    for (var i = 0; i < a.length; i++) {
+      if (i < start || i > a.length - end) rez.push(a[i])
+    }
+    return rez;
+  }
+
+  var updatePercent = (elem) => (i, n) => {
+    var t = 100 * i / n;
     //t = 82.2
     var s = t.toFixed(2) + '%'
     elem.innerHTML = s
   }
-var displayResults = (elem, callback, nnn) => (time, results) => {
-  var n; if (nnn) {n = nnn} else {n =nn}
-  //console.log('onfinish: ', time ,results.length)
-  elem.innerHTML= time + ' sec; found = ' + results.length + 
-    '; numbers/sec = ' + (n/time).toFixed(3) + JSON.stringify(trimArray(results, 13,13)).replaceAll(',', ', ')
+  var displayResults = (elem, callback, nnn) => (time, results) => {
+    var n; if (nnn) { n = nnn } else { n = nn }
+    //console.log('onfinish: ', time ,results.length)
+
+    var nsec = (n / time).toFixed(0)
+    var nsecShort = (nsec > 22222) ? (nsec / 1000).toFixed(0) + 'k' : nsec;
+    //elem.innerHTML = (elem.typeName ? ('<td'> + elem.typeName + '</td>'): elem.innerHTML) + 
+    elem.innerHTML = '<td>' + elem.typeName2 + '</td>' + 
+      '<td>' +time + '</td><td>' + results.length +
+      '</td><td>' + nsecShort + '</td><td>' +
+      JSON.stringify(trimArray(results, 5, 6)).replaceAll(',', ', ') + '</td>'
+    var tds = elem.querySelectorAll('td')
+
+    elem.innerHTML2 = time + ' sec; found = ' + results.length +
+      '; numbers/sec = ' + (n / time).toFixed(3) + 
+      JSON.stringify(trimArray(results, 13, 13)).replaceAll(',', ', ')
     var wrez = JSON.stringify(results).replace(',', ', ')
     //console.log('web gl rez', wrez.length)
     if (elem == webglElem) {
       //elem.innerHTML = wrez
     }
-  //  elem.innerHTML = 'tt time: ' + time + 'number: ' + results.length +'JSON: ' + JSON.stringify(results).replaceAll(',', ', ')
-  if (callback) callback();
-}
-
- 
-var startNumber = 3000*1000
-startNumber = 1000*1000*1+1
-startNumber =  1267401
-startNumber =  1397401
-
-var classicElem = document.getElementById('classicElem')
-var webglElem = document.getElementById('webglElem')
-var classicElemAnim = document.getElementById('classicElemAnim')
-var classicElemAnimBlock = document.getElementById('classicElemAnimBlock')
-var nn;
-var rezClassicA
-var rezWebGLA
-
-// 1267457 / 337 = 3761
-
-function main() {
-  var bench = Math.floor(miniBenchmark());
-
-  nn = 2.115 * bench
-  //mainWebglInfo();
-//nn = 36300
-document.getElementById('toCheck').value = nn
-
-var calcGL = () => calcWebGL(startNumber, nn, () => {}, displayResults(webglElem))
-
-calcClassic(startNumber, nn, ()=>{}, displayResults(classicElem) )
-calcClassicAnim(startNumber, Math.sqrt(nn)/10, updatePercent(classicElemAnim), 
-  displayResults(classicElemAnim,
-  () => calcClassicAnimBlock(startNumber, nn, updatePercent(classicElemAnimBlock),
-    displayResults(classicElemAnimBlock, calcGL)
-  ), 155)
-)
-} // main
+    //  elem.innerHTML = 'tt time: ' + time + 'number: ' + results.length +'JSON: ' + JSON.stringify(results).replaceAll(',', ', ')
+    if (callback) callback();
+  } // displayResults
 
 
+  var startNumber = 3000 * 1000
+  startNumber = 1000 * 1000 * 100 + 1
+  //startNumber =  1267401
+  //startNumber =  1397401
 
-//calcClassicAnim(startNumber, nn, updatePercent,  )
+  var classicElem = document.getElementById('classicElem')
+  var webglElem = document.getElementById('webglElem')
+  var classicElemAnim = document.getElementById('classicElemAnim')
+  var classicElemAnimBlock = document.getElementById('classicElemAnimBlock')
+
+  classicElem = document.getElementById('classicRow')
+  webglElem = document.getElementById('webGLRow')
+  classicElemAnim = document.getElementById('classicAnimRow')
+  classicElemAnimBlock = document.getElementById('classicAnimBlockRow')
+  classicElem.typeName2 = 'classic'
+  classicElemAnim.typeName2 = 'classic RAF'
+  classicElemAnimBlock.typeName2 = 'classic RAF with blocks'
+  webglElem.typeName2 = 'WebGL'
+
+  var classicUpdate = document.getElementById('classicUpdate')
+  var classicAnimUpdate = document.getElementById('classicAnimUpdate')
+  var classicAnimBlockUpdate = document.getElementById('classicAnimBlockUpdate')
+  var webGLUpdate = document.getElementById('webGLUpdate')
+
+
+  var nn;
+  var rezClassicA
+  var rezWebGLA
+
+  // 1267457 / 337 = 3761
 
 
 
 
+  function main() {
+    var bench = Math.floor(miniBenchmark());
 
-/*
-for (let i = 0; i < dstWidth * dstHeight; ++i) {
-  log(results[i * 4]);
-}
+    nn = 112.115 * bench
+    let elNumbers2check = document.getElementById('number2check')
+    elNumbers2check.innerHTML = 'From ' + startNumber +' to ' + (startNumber+nn).toFixed(0) + 
+      ' (range calculated according to your machine speed)'
 
-function log(...args) {
-  //const elem = document.createElement('pre');
-var elem = document.getElementById('bbb')
-  elem.textContent = args.join(' ');
-  //document.body.appendChild(elem);
-}
-*/
+    var calcGL = () => calcWebGL(startNumber, nn, {
+      onStart: () => { webGLUpdate.innerHTML = 'processing...' }, 
+      onFinish: displayResults(webglElem)
+    });
+    var calcBlock = () => calcClassicAnimBlock(startNumber, nn , updatePercent(classicAnimBlockUpdate),
+          displayResults(classicElemAnimBlock, calcGL)
+        );
+    var calcAnim = () => calcClassicAnim(startNumber, Math.sqrt(nn) / 10, updatePercent(classicAnimUpdate),
+      displayResults(classicElemAnim, calcBlock
+, 15500)
+    )
+
+    let classicCallbacks = {
+      onStart: () => {
+        classicUpdate.innerHTML = 'processing...'
+      },
+      onFinish: (time, rez) => {
+        displayResults(classicElem, calcAnim)(time, rez);
+      }
+    }
+
+    calcClassicObj(startNumber, nn, classicCallbacks)
+    //calcClassicObj(startNumber, nn, () => {classicUpdate.innerHTML = 'processing ...' }, displayResults(classicElem))
 
 
-//var nnn = 50000
+    
+  } // main
+  //main()
+  
+  setTimeout(main, 300)
 
-// prime classic
+
+
+  function main_3() { // without calcClassic
+    var bench = Math.floor(miniBenchmark());
+
+    nn = 112.115 * bench
+    let elNumbers2check = document.getElementById('number2check')
+    debugger
+    elNumbers2check.innerHTML = 'nnnn'//nn.toFixed(0)
+    //mainWebglInfo();
+    //nn = 36300
+    document.getElementById('toCheck').value = nn
+
+    var calcGL = () => calcWebGL(startNumber, nn, () => { }, displayResults(webglElem))
+
+    calcClassic(startNumber, nn, () => {classicUpdate.innerHTML = 'processing ...' }, displayResults(classicElem))
+    calcClassicAnim(startNumber, Math.sqrt(nn) / 10, updatePercent(classicAnimUpdate),
+      displayResults(classicElemAnim,
+        () => calcClassicAnimBlock(startNumber, nn / 10, updatePercent(classicAnimBlockUpdate),
+          displayResults(classicElemAnimBlock, calcGL)
+        ), 155)
+    )
+  } // main3
+
+  //calcClassicAnim(startNumber, nn, updatePercent,  )
 
 
 
-
-
-var displayResultsAnim33 = (elem) => (time, results) => {
-  console.log('onfinish: ', time ,results)
-  elem.innerHTML= time + ' sec; number = ' + results.length
-
-  calcClassicAnimBlock(startNumber, nn, updatePercent(classicElemAnimBlock), 
-  displayResults(classicElemAnimBlock) 
+  document.getElementById('classicButton').addEventListener('click',
+    () => calcClassic(document.getElementById('toCheck').value)
   )
-}
 
 
-
-
-
-
-
-
-
-
-
-document.getElementById('classicButton').addEventListener('click', 
-    () =>  calcClassic(document.getElementById('toCheck').value)
-)
-
-console.log('tttttttttttttttttt')
-
-/*
-//console.log('cdel ', JSON.stringify(cdel))
-var diffar = []
-var diff = 0;
-for (var i=0; i<inOut.length; i++) {
-  if (inOut[i][0] != cdel[i][0] || inOut[i][1] != cdel[i][1]) {
-    diff += 1
-    diffar.push([inOut[i][0], inOut[i][1], cdel[i][0], cdel[i][1]])
-  } else {
-    diff += 0
+  /*
+  //console.log('cdel ', JSON.stringify(cdel))
+  var diffar = []
+  var diff = 0;
+  for (var i=0; i<inOut.length; i++) {
+    if (inOut[i][0] != cdel[i][0] || inOut[i][1] != cdel[i][1]) {
+      diff += 1
+      diffar.push([inOut[i][0], inOut[i][1], cdel[i][0], cdel[i][1]])
+    } else {
+      diff += 0
+    }
   }
-}
-console.log('diff ', diff, inOut.length)
-console.log('diff inout, classic ', JSON.stringify(diffar))
-
-
-*/
-
-
+  console.log('diff ', diff, inOut.length)
+  console.log('diff inout, classic ', JSON.stringify(diffar))
+  
+  
+  */
 
 
 
@@ -242,110 +330,12 @@ console.log('diff inout, classic ', JSON.stringify(diffar))
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-function init23232() {
-      canvas = document.querySelector("#glCanvas")
-      gl = canvas.getContext("webgl")
-      if (gl === null) {
-        console.error("Unable to initialize WebGL. Your browser or machine may not support it.")
-        return
-      }
-
-      // fill info about GPU
-      var debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
-      var vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
-      var renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-      if (renderer.includes('SwiftShader')) renderer += ' (NO GPU)'
-      document.getElementById('gpuInfo').innerHTML = 'GPU: ' + renderer
-
-      gl.clearColor(0.0, 0.0, 10.5, 1.0)
-      gl.clear(gl.COLOR_BUFFER_BIT)
-
-      let vs = createShader(gl, gl.VERTEX_SHADER, vertexShader)
-      let fs = createShader(gl, gl.FRAGMENT_SHADER, fragmentShader)
-      program = createProgram(gl, vs, fs)
-
-      panLoc = gl.getUniformLocation(program, 'pan')
-      positionAttributeLocation = gl.getAttribLocation(program, "a_position")
-      positionBuffer = gl.createBuffer()
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-
-      var cc = 5000000; // reserve place for 5M points
-
-      for (var i = 0; i < cc; i++) {
-        var px = Math.random()
-        var py = Math.random()
-        positions.push(
-          100 + 380 * px, 100 + 380 * py
-        )
-      }
-
-      fpos = new Float32Array(positions)
-
-      gl.bufferData(gl.ARRAY_BUFFER, fpos, gl.STATIC_DRAW)
-      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-      gl.useProgram(program)
-      gl.enableVertexAttribArray(positionAttributeLocation)
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-
-      // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
-      size = 2;          // 2 components per iteration
-      type = gl.FLOAT;   // the data is 32bit floats
-      normalize = false; // don't normalize the data
-      stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-      offset = 0;        // start at the beginning of the buffer
-      gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset)
-
-      primitiveType = gl.POINTS
-
-      const icon = document.querySelector('img');  // get the <img> tag
-
-      const glTexture = gl.createTexture()
-      gl.activeTexture(gl.TEXTURE0);  // this is the 0th texture
-      gl.bindTexture(gl.TEXTURE_2D, glTexture)
-
-      // actually upload bytes
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, icon)
-
-      gl.generateMipmap(gl.TEXTURE_2D)
-      gl.enable(gl.BLEND)
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-      fpos[1] = 50
-    } //  init
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</script>
-<script>
   var ts = Date.now()
   var se = document.getElementById('webScript');
-  se.src = 'calcWebGL.js?t=' + ts;
+  //se.src = 'calcWebGL.js?t=' + ts;
   //se.onload = main;
 </script>
 </body>
 <script src='live.js'></script>
+
 </html>

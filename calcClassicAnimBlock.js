@@ -14,12 +14,16 @@
           break;
         }
       }
+      if (i - i.toFixed(0)) {
+      //  debugger
+      }
       if (isPrime) animResult.push(i)
     }
   }
 
   function calcClassicAnimBlock(startNumber, nn, onUpdate, onFinish) { //                  CLASSIC ANIM FRAME
-    var step = nn / 10
+    var step = Math.floor(nn / 10)
+    step += (step % 2) ? 0 : 1
     console.log('start anim2', nn, step)
     var tt0 = Date.now()
     var count = 0;
@@ -27,12 +31,15 @@
     function testStep() {
       if (localStart >= nn) {
         var tt1 = Date.now()
+      //  debugger
         onFinish((tt1-tt0)/1000, animResult)
         return
       }
       var cand = startNumber + localStart; //index*2
       if (cand % 2 == 0) cand++
       calcPart(cand, step);
+      console.log('llll aa ', animResult.length)
+      
       onUpdate(localStart, nn)
       localStart += step
       var testFunction = testStep.bind(this)

@@ -1,4 +1,5 @@
 function calcClassic(startNumber, toWork,  onUpdate,onFinish) {  
+  onUpdate();
   console.log('classic ', startNumber, toWork)  
     var rez = []
     var t0 = Date.now()
@@ -7,7 +8,36 @@ function calcClassic(startNumber, toWork,  onUpdate,onFinish) {
         var isPrime = true
         for (var j=3; j<sq; j+=2) {
             if (i%j == 0) {
-              console.log('clllllaaaa ', i , j)
+                isPrime = false;
+                break;
+            }
+        }
+        if (isPrime) rez.push(i)
+    }
+    var t1 = Date.now()
+    var time = (t1-t0)/1000
+    debugger
+    onUpdate()
+    console.log('time classic', time)
+    console.log('time rez', rez)
+
+    onFinish(time, rez)
+    onUpdate()
+
+}
+
+
+
+function calcClassicObj(startNumber, toWork, cb) {
+
+  function calc() {
+    var rez = []
+    var t0 = Date.now()
+    for (var i=startNumber; i<=startNumber+toWork; i+=2) {
+        var sq = Math.sqrt(i) +2
+        var isPrime = true
+        for (var j=3; j<sq; j+=2) {
+            if (i%j == 0) {
                 isPrime = false;
                 break;
             }
@@ -18,8 +48,13 @@ function calcClassic(startNumber, toWork,  onUpdate,onFinish) {
     var time = (t1-t0)/1000
     console.log('time classic', time)
     console.log('time rez', rez)
+    cb.onFinish(time,rez)
+  }
 
-    onFinish(time, rez)
+  window.requestAnimationFrame(() => {
+    cb.onStart();
+    window.requestAnimationFrame(calc);  
+  })
 }
 
 
