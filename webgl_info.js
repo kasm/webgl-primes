@@ -62,9 +62,13 @@ console.log('main get info')
     //var infoElem = document.getElementById('webglTable')
     var trs = infoElem.querySelectorAll('tr')
     var tds = Array.from(trs).map(e => e.querySelectorAll('td'))
-    tds[0][1].innerHTML = glInfo['GPU']
-    tds[1][1].innerHTML = glInfo['vendor']
-    var precisionStart = 2
+    tds[0][1].innerHTML = glInfo['vendor']
+    tds[1][1].innerHTML =platform.name +
+    " v" + platform.version +
+    " on " + platform.os;
+    tds[2][1].innerHTML = glInfo['GPU']
+
+    var precisionStart = 3
     var vertexFloatPrec = JSON.parse(glInfo['vertex float precision'])
     tds[precisionStart + 1][1].innerHTML = vertexFloatPrec['precision']
     tds[precisionStart + 1][2].innerHTML = vertexFloatPrec['rangeMin']
@@ -83,14 +87,6 @@ console.log('main get info')
     tds[precisionStart + 4][3].innerHTML = fragmentIntPrec['rangeMax']
 
     tds[precisionStart + 5][1].innerHTML = glInfo['Real integer precision']
-    tds[precisionStart + 6][1].innerHTML =platform.name +
-    " v" + platform.version +
-    " on " + platform.os;
-
-
-    
-    
-  
   }
 
 

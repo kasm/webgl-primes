@@ -34,36 +34,49 @@ th.timeCol {
  .table > tbody > tr > td {
   padding: 4;
 }
+.font2 {
+  font-size: smaller;
+  width: 47%;
+}
+table {
+  font-size: small;
+}
+.calculating {
+  background-color: lightpink;
+}
   </style>
 </head>
 
 <body>
-  <div id='primes_main' style='border: 2px solid green; width: 700px;'>
+  <div id='primes_main' style='width: 700px;'>
 
 
-    <table id='webglTable' style='border: 1px solid red' class='table mytable'>
+    <table id='webglTable' style='' class='table mytable'>
       <thead>
         <tr><td colspan="4" style='text-align: center;'>General machine properites</td></tr>
       </thead>
       <tbody id='webgl-params'>
-
-        <tr><td>GPU</td><td colspan="3">bb</td></tr>
         <tr><td>Vendor</td><td colspan="3">bb</td></tr>
+        <tr><td>platform</td><td colspan="3">bb</td></tr>
+        <tr><td>GPU</td><td colspan="3">bb</td></tr>
 
-        <tr class='headrow'><th>aa</th><th>precision</th><th>min</th><th>max</th></tr>
+        <tr class='headrow'><th></th><th>precision</th><th>min</th><th>max</th></tr>
         <tr><td>vertex float</td><td>bb</td><td>bb</td><td>bb</td></tr>
         <tr><td>vertex integer</td><td>bb</td><td>bb</td><td>bb</td></tr>
         <tr><td>fragment float</td><td>bb</td><td>bb</td><td>bb</td></tr>
         <tr><td>fragment integer</td><td>bb</td><td>bb</td><td>bb</td></tr>
 
         <tr><td>real fragment int precision</td><td colspan="3">bb</td></tr>
-        <tr><td>platform</td><td colspan="3">bb</td></tr>
         <tr><td>numbers to check</td><td colspan="3" id = 'number2check'></td></tr>
 
       </tbody>
     </table>
 
-    <div style = 'text-align: center; font-size: large; display: none;'>Calculation results</div>
+    <div style = 'text-align: center; font-size: large; padding: 10px;'>
+      <button  id='calcButton'>Push to calculate !</button>
+    </div>
+
+    
 
     <table class = 'table'>
       <thead>
@@ -73,29 +86,39 @@ th.timeCol {
         <th>type</th>
         <th class='timeCol'>time, sec</th>
         <th>found</th>
-        <th>numbers/sec</th>
+        <th>performance,<br>numbers/sec</th>
         <th>examples</th>
       </tr>
       </thead>
-      <tbody>
-        <tr id=classicRow><td>classic</td><td id=classicUpdate></td><td></td><td></td><td></td></tr>
-        <tr id=classicAnimRow><td>classic2</td><td id=classicAnimUpdate></td><td></td><td></td><td></td></tr>
-        <tr id=classicAnimBlockRow><td>classic</td><td id=classicAnimBlockUpdate></td><td></td><td></td><td></td></tr>
-        <tr id=webGLRow><td>classic</td><td id=webGLUpdate></td><td></td><td></td><td></td></tr>
+      <tbody id='resultTable'>
+        <tr id=classicRow>
+          <td>classic CPU, no update (single block)</td>
+          <td id=classicUpdate></td><td></td><td></td><td class='font2'></td>
+        </tr>
+        <tr id=classicAnimRow>
+          <td>classic CPU, update by RAF<sup>1</sup> for each number</td>
+          <td id=classicAnimUpdate></td><td></td><td></td><td class='font2'></td>
+        </tr>
+        <tr id=classicAnimBlockRow> 
+          <td>classic CPU, update by RAF every 10%</td>
+          <td id=classicAnimBlockUpdate></td>
+          <td></td><td></td><td class='font2'></td>
+        </tr>
+        <tr id=webGLRow>
+          <td>'WebGL - calculation by GPU</td>
+          <td id=webGLUpdate></td>
+          <td></td><td></td><td class='font2'></td>
+        </tr>
       </tbody>
     </table>
+    <div>
+      1 - RequestAnimationFrame<br>
+      2 - Search range decreased due to low performance<br>
+      3 - Search range increased due to block size
+    </div>
 
     <div>
-
-      <div id='rez'>
-        <div><button id='classicButton'>start classic</button><span id='classicElem'>a</span></div>
-        <div><button id='classicBtnAnim'>start classic</button><span id='classicElemAnim'>a</span></div>
-        <div><button id='classicBtnAnimBlock'>start classic</button>
-          <span id='classicElemAnimBlock'>a</span>
-        </div>
-        <div><button id='webglButton'>start webgl</button><span id='webglElem'>a</span></div>
-      </div>
-    </div>
+      
   </div>
 </body>
 <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
@@ -131,10 +154,8 @@ th.timeCol {
 
 <script>
 
-  console.log(platform);
-  document.write("You are using " + platform.name +
-    " v" + platform.version +
-    " on " + platform.os);
+  var calcHandler;
+  var isWorking = false;
 
 
 
@@ -168,6 +189,7 @@ th.timeCol {
   }
 
   var updatePercent = (elem) => (i, n) => {
+    elem.classList.add('calculating')
     var t = 100 * i / n;
     //t = 82.2
     var s = t.toFixed(2) + '%'
@@ -176,15 +198,27 @@ th.timeCol {
   var displayResults = (elem, callback, nnn) => (time, results) => {
     var n; if (nnn) { n = nnn } else { n = nn }
     //console.log('onfinish: ', time ,results.length)
+    var examples = JSON.stringify(trimArray(results, 5, 6)).replaceAll(',', ', ')
 
     var nsec = (n / time).toFixed(0)
     var nsecShort = (nsec > 22222) ? (nsec / 1000).toFixed(0) + 'k' : nsec;
     //elem.innerHTML = (elem.typeName ? ('<td'> + elem.typeName + '</td>'): elem.innerHTML) + 
-    elem.innerHTML = '<td>' + elem.typeName2 + '</td>' + 
+    elem.innerHTML22 = '<td>' + elem.typeName2 + '</td>' + 
       '<td>' +time + '</td><td>' + results.length +
-      '</td><td>' + nsecShort + '</td><td>' +
-      JSON.stringify(trimArray(results, 5, 6)).replaceAll(',', ', ') + '</td>'
+      '</td><td>' + nsecShort + '</td><td class="font2">' +
+      examples + '</td>'
     var tds = elem.querySelectorAll('td')
+    var m1 = '<span style="text-transform:uppercase">1</span>'
+    var m2 = '<span style="text-transform:uppercase"><sup>2</sup></span>'
+    var m3 = '<span style="text-transform: uppercase"><sup>3</sup></span>'
+    console.log('eeeeeeeeeeeeeeee ', elem.id)
+    tds[1].classList.remove('calculating')
+    tds[1].innerHTML = time
+    tds[2].innerHTML = results.length + 
+      ((elem.id == 'classicAnimRow') ? m2 : (elem.id == 'classicAnimBlockRow') ? m3 : '')
+    tds[3].innerHTML = nsecShort
+    tds[4].innerHTML = examples
+    
 
     elem.innerHTML2 = time + ' sec; found = ' + results.length +
       '; numbers/sec = ' + (n / time).toFixed(3) + 
@@ -196,9 +230,21 @@ th.timeCol {
     }
     //  elem.innerHTML = 'tt time: ' + time + 'number: ' + results.length +'JSON: ' + JSON.stringify(results).replaceAll(',', ', ')
     if (callback) callback();
+    if (elem.id === 'webGLRow') {
+      //debugger
+      //elem.removeEventListener('click', calcHandler)
+      isWorking = false;
+    }
   } // displayResults
 
-
+  function cleanResults() {
+    var t = document.getElementById('resultTable').querySelectorAll('tr')
+    t.forEach((e, i) => {
+      e.querySelectorAll('td').forEach((e2, i2) => {
+        if (i2) e2.innerHTML = ''
+      })
+    })
+  }
   var startNumber = 3000 * 1000
   startNumber = 1000 * 1000 * 100 + 1
   //startNumber =  1267401
@@ -213,10 +259,11 @@ th.timeCol {
   webglElem = document.getElementById('webGLRow')
   classicElemAnim = document.getElementById('classicAnimRow')
   classicElemAnimBlock = document.getElementById('classicAnimBlockRow')
-  classicElem.typeName2 = 'classic'
-  classicElemAnim.typeName2 = 'classic RAF'
-  classicElemAnimBlock.typeName2 = 'classic RAF with blocks'
-  webglElem.typeName2 = 'WebGL'
+
+  classicElem.typeName2 = 'classic CPU, no update (single block)'
+  classicElemAnim.typeName2 = 'classic CPU, update by RAF* for each number'
+  classicElemAnimBlock.typeName2 = 'classic CPU, update by RAF every 10%'
+  webglElem.typeName2 = 'WebGL - calculation by GPU'
 
   var classicUpdate = document.getElementById('classicUpdate')
   var classicAnimUpdate = document.getElementById('classicAnimUpdate')
@@ -231,31 +278,37 @@ th.timeCol {
   // 1267457 / 337 = 3761
 
 
+  var bench = Math.floor(miniBenchmark());
+
+  nn = 112.115 * bench
+    let elNumbers2check = document.getElementById('number2check')
+    elNumbers2check.innerHTML = 'From <b>' + startNumber +'</b> to <b>' + (startNumber+nn).toFixed(0) + 
+      '</b> (range calculated according to your machine speed)'
 
 
   function main() {
-    var bench = Math.floor(miniBenchmark());
-
-    nn = 112.115 * bench
-    let elNumbers2check = document.getElementById('number2check')
-    elNumbers2check.innerHTML = 'From ' + startNumber +' to ' + (startNumber+nn).toFixed(0) + 
-      ' (range calculated according to your machine speed)'
-
+    if (isWorking) return;
+    isWorking = true;
+    //classicElem.innerHTML = '<td>1</td>'
+    cleanResults();
     var calcGL = () => calcWebGL(startNumber, nn, {
-      onStart: () => { webGLUpdate.innerHTML = 'processing...' }, 
+      onStart: () => { 
+        webGLUpdate.innerHTML = 'working...' 
+        webGLUpdate.classList.add('calculating')
+      }, 
       onFinish: displayResults(webglElem)
     });
     var calcBlock = () => calcClassicAnimBlock(startNumber, nn , updatePercent(classicAnimBlockUpdate),
           displayResults(classicElemAnimBlock, calcGL)
         );
     var calcAnim = () => calcClassicAnim(startNumber, Math.sqrt(nn) / 10, updatePercent(classicAnimUpdate),
-      displayResults(classicElemAnim, calcBlock
-, 15500)
+      displayResults(classicElemAnim, calcBlock)
     )
 
     let classicCallbacks = {
       onStart: () => {
-        classicUpdate.innerHTML = 'processing...'
+        classicUpdate.innerHTML = 'working...'
+        classicUpdate.classList.add('calculating')
       },
       onFinish: (time, rez) => {
         displayResults(classicElem, calcAnim)(time, rez);
@@ -270,39 +323,11 @@ th.timeCol {
   } // main
   //main()
   
-  setTimeout(main, 300)
+  setTimeout(main, 100)
+  calcHandler = document.getElementById('calcButton').addEventListener('click', () => {main();  })
 
 
 
-  function main_3() { // without calcClassic
-    var bench = Math.floor(miniBenchmark());
-
-    nn = 112.115 * bench
-    let elNumbers2check = document.getElementById('number2check')
-    debugger
-    elNumbers2check.innerHTML = 'nnnn'//nn.toFixed(0)
-    //mainWebglInfo();
-    //nn = 36300
-    document.getElementById('toCheck').value = nn
-
-    var calcGL = () => calcWebGL(startNumber, nn, () => { }, displayResults(webglElem))
-
-    calcClassic(startNumber, nn, () => {classicUpdate.innerHTML = 'processing ...' }, displayResults(classicElem))
-    calcClassicAnim(startNumber, Math.sqrt(nn) / 10, updatePercent(classicAnimUpdate),
-      displayResults(classicElemAnim,
-        () => calcClassicAnimBlock(startNumber, nn / 10, updatePercent(classicAnimBlockUpdate),
-          displayResults(classicElemAnimBlock, calcGL)
-        ), 155)
-    )
-  } // main3
-
-  //calcClassicAnim(startNumber, nn, updatePercent,  )
-
-
-
-  document.getElementById('classicButton').addEventListener('click',
-    () => calcClassic(document.getElementById('toCheck').value)
-  )
 
 
   /*

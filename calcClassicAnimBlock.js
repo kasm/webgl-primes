@@ -22,6 +22,8 @@
   }
 
   function calcClassicAnimBlock(startNumber, nn, onUpdate, onFinish) { //                  CLASSIC ANIM FRAME
+    animCount = 0;
+    animResult = []
     var step = Math.floor(nn / 10)
     step += (step % 2) ? 0 : 1
     console.log('start anim2', nn, step)
