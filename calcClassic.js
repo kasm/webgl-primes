@@ -28,6 +28,7 @@ function calcClassic(startNumber, toWork,  onUpdate,onFinish) {
 
 
 
+
 function calcClassicObj(startNumber, toWork, cb) {
 
   function calc() {
