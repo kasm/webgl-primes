@@ -6,7 +6,7 @@ function calcClassic(startNumber, toWork,  onUpdate,onFinish) {
     for (var i=startNumber; i<=startNumber+toWork; i+=2) {
         var sq = Math.sqrt(i) +2
         var isPrime = true
-        for (var j=3; j<sq; j+=2) {
+        for (var j=3; j<sq; j+=2) { 
             if (i%j == 0) {
                 isPrime = false;
                 break;
