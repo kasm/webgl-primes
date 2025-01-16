@@ -1,3 +1,11 @@
+let precFloat = [
+  {precision: 'lowp', isFloat: 'float' },
+  {precision: 'mediump', isFloat: 'float'}, 
+  {precision: 'highp', isFloat: 'float'}, 
+  {precision: 'lowp', isFloat: 'int'}, 
+  {precision: 'mediump', isFloat: 'int'}, 
+  {precision: 'highp', isFloat: 'int'}, 
+]
 
 
   const vs_info = `
@@ -32,7 +40,7 @@
     console.log('vfprec ', precParse(vfprec))
     r['GPU'] = renderer;
     r['vendor'] = vendor
-    r['Real integer precision'] = findPrecision(gl) + 'M'
+    r['Real integer precision'] = findPrecisionMulty(gl) + 'M'
     console.log('rrrrrrrrrrrrrrrr21', r)
     return r;
   } // getWebGLInfo
@@ -90,10 +98,48 @@ console.log('main get info')
   }
 
 
-  function getCheckPresisionShader(testNumber) {
-    var checkPresisionShader = `
-precision highp float;
-precision highp int;
+
+
+
+
+
+
+
+
+function getCheckPresisionShader(testNumber, precision, isFloat) {
+  let fprec = 'precision highp float;'
+  if (isFloat == 'float') fprec = 'precision '  + precision + ' float;' 
+  // let fprec = 'precision ' + precision + 'float;' // ' + isFloat + ';'
+  let iprec = 'precision highp int;'
+  if (isFloat == 'int') iprec = 'precision ' + precision + ' int;'
+
+
+
+  let calcPart = `
+  int test = ` + testNumber.toString() + `;
+    // float test = ` + testNumber.toString() + `.;
+    test = test + 1;
+    gl_FragColor = EncodeI(test);
+    
+  `
+  if (isFloat == 'float') calcPart = `
+    float test = ` + testNumber.toString() + `.;
+    test = test + 1.;
+    gl_FragColor = EncodeF(test);
+  
+  
+  `
+
+
+  var checkPresisionShader = `
+
+  ` + fprec + `
+  
+  ` + iprec + `
+  
+  
+// precision lowp float;
+// precision highp int;
 
 vec4 EncodeI(int v) {
   int d0, d1, d2, d3, t, vt;
@@ -111,22 +157,82 @@ vec4 EncodeI(int v) {
     float(d3) / 255.
   );
 }
+
+  vec4 EncodeF(float v1) {
+  int v = int(v1 + .0);
+  int d0, d1, d2, d3, t, vt;
+  t = v / 256;
+  d0 = v - t*256;
+  vt = t / 256;
+  d1 = t - vt*256;
+  t = vt / 256;
+  d2 = vt - t * 256;
+  d3 = (v / 256) / 256 / 256;
+  return vec4(
+    float(d0) / 255.,
+    float(d1) / 255.,
+    float(d2) / 255.,
+    float(d3) / 255.
+  );
+}
+
+  vec3 enc3(float v1) {
+    int v = int(v1 );
+    int d0, d1, d2, d3, t, vt;
+    t = v / 256;
+    d0 = v - t*256;
+    vt = t / 256;
+    d1 = t - vt*256;
+    t = vt / 256;
+    d2 = vt - t * 256;
+    d3 = (v / 256) / 256 / 256;
+    return vec3(
+      float(d0) / 255.,
+      float(d1) / 255.,
+      float(d2) / 255.
+     // float(d3) / 255.
+    );
+  }
+  vec4 EncodeF2(float f) { //                     FLOAT32 ENCODE TO RGBA
+    float order = floor(log2(f)); 
+    float base = pow(2., order);
+    
+    // convert to the standard form and remove 
+    // highest bit (186 => 1.86 => .86)
+    float m = f / base - 1.; 
+  
+    // 8388608 == 256. * 256. * 256. / 2.
+    vec3 e3 = enc3(m * 8388608.); // convert to integer (1 bit in b2 left to order bit)
+  
+    float t1 = order - floor(order/2.) * 2.;
+    return vec4(e3[0] , e3[1] , e3[2] + (1.-t1) * 128./255.,
+    ( floor((order-1.) / 2.)  + 64.)/ 256.);
+  }
+
+
 void main() {
-  int test = ` + testNumber.toString() + `;
-  test = test + 1;
-  gl_FragColor = EncodeI(test);
-  //gl_FragColor =vec4(.222,.5,.44,.22);
+
+` + calcPart + `
+
+
+  // // int test = ` + testNumber.toString() + `;
+  // float test = ` + testNumber.toString() + `.;
+  // test = test + 1.;
+  // gl_FragColor = EncodeF(test);
+  // gl_FragColor =vec4(.222,.5,.44,.22); // 946 896 697
 
   
 }
 `
-    return checkPresisionShader
-  }
+
+console.log(checkPrecision)
+  return checkPresisionShader
+}
 
 
 
-  function checkPrecision(gl, testNumber) {         //                CHECK PRECISION
-    const program = webglUtils.createProgramFromSources(gl, [vs_info, getCheckPresisionShader(testNumber)]);
+  function checkPrecision(gl, testNumber, prec, flo) {         //                CHECK PRECISION
+    const program = webglUtils.createProgramFromSources(gl, [vs_info, getCheckPresisionShader(testNumber, prec, flo)]);
     gl.useProgram(program); // use program before work with locations
 
 
@@ -176,7 +282,7 @@ void main() {
       (k) ? rrez[ii].push(e) : rrez[ii] = [e]
     })
     InOut = []; InOut = rrez.map((e, i) => [testNumber, e.reduce((a, e, i) => a + e * Math.pow(256, i), 0)])
-    console.log('JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ', InOut)
+    console.log('JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ', testNumber, InOut[0])
     return InOut[0][1]
   } // checkPrecision
 
@@ -185,23 +291,76 @@ void main() {
 
 
 
-  function findPrecision(gl) {
+  function findPrecision1(gl) {
     var testArray2 = [1, 2, 3, 4, 5, 6, 7, 8, 8.3, 8.4, 9,
       10, 11, 12, 13, 14, 15, 16, 16.7, 16.8, 17, 18, 19, 20,
-      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000, 2100, 2200, 3000, 4000, 4100, 4200, 4300, 4400,
+      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2001, 2100, 2200, 3000, 4000, 4100, 4200, 4300, 4400,
       5000, 6000, 7000, 8000, 9000, 10000
     ]
-    var testArray = [ 16.7, 16.8,  2100, 2200, 4100, 4200, 4300, 4400    ]
+    var testArray = [ 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 16.7, 16.8, 20, 1100, 2200, 4100, 4200, 4300, 4400    ]
   
     var maxVal = 0;
     for (var i = 0; i < testArray.length; i++) {
+      console.warn(i, testArray[i])
       var ta = testArray[i] * 1000 * 1000;
+
       var cp = checkPrecision(gl, ta)
       var diff = cp - ta
-      //console.log('test2 : ', ta / 1000 / 1000, cp - ta)
+      console.log('test2 : ', ta / 1000 / 1000, cp - ta)
       if (diff === 1) maxVal = testArray[i]
     }
     return maxVal  
+  }
+
+  // let precFloat = [
+  //   {precision: 'lowp', isFloat: 'float' },
+  //   {precision: 'mediump', isFloat: 'float'}, 
+  //   {precision: 'highp', isFloat: 'float'}, 
+  //   {precision: 'lowp', isFloat: 'int'}, 
+  //   {precision: 'mediump', isFloat: 'int'}, 
+  //   {precision: 'highp', isFloat: 'int'}, 
+  // ]
+  
+
+  function findPrecisionMulty(gl) {
+    var testArray2 = [1, 2, 3, 4, 5, 6, 7, 8, 8.3, 8.4, 9,
+      10, 11, 12, 13, 14, 15, 16, 16.7, 16.8, 17, 18, 19, 20,
+      100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2001, 2100, 2200, 3000, 4000, 4100, 4200, 4300, 4400,
+      5000, 6000, 7000, 8000, 9000, 10000
+    ]
+    var testArray = [ 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 16.7, 16.8, 20, 1100, 2100, 2200, 4100, 4200, 4300, 4400    ]
+  
+    var maxVal = 0;
+    for (let ii=0; ii<precFloat.length; ii++) {
+      maxVal=0
+      let prec = precFloat[ii].precision
+      let flo = precFloat[ii].isFloat
+    for (var i = 0; i < testArray.length; i++) {
+      console.warn(i, testArray[i], prec, flo)
+      var ta = testArray[i] * 1000 * 1000;
+
+      var cp = checkPrecision(gl, ta, prec, flo)
+      var diff = cp - ta
+      console.log('test2 : ', ta / 1000 / 1000, cp - ta)
+      if (diff === 1) maxVal = testArray[i]
+    }
+    precFloat[ii].maxVal = maxVal
+  }
+
+  fillPrecHtml(precFloat)
+  console.warn('_____________________________ ', precFloat)
+    return maxVal  
+  }
+
+  function fillPrecHtml(data) {
+    let cont = document.createElement('div')
+    cont = document.getElementById('precs')
+    for (let i=0; i<data.length; i++) {
+      let e = data[i]
+      cont.innerHTML += e.maxVal + '; '
+      let el = document.createElement('div')
+
+    }
   }
 
 
